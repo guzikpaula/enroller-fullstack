@@ -17,6 +17,7 @@ export default function MeetingsPage({username}) {
         fetchMeetings();
     }, []);
 
+
     async function handleNewMeeting(meeting) {
         const response = await fetch('/api/meetings', {
             method: 'POST',
@@ -24,16 +25,46 @@ export default function MeetingsPage({username}) {
             headers: { 'Content-Type': 'application/json' }
         });
         if (response.ok) {
-            const nextMeetings = [...meetings, meeting];
+            const createdMeeting = await response.json();
+        const nextMeetings = [...meetings, createdMeeting];
             setMeetings(nextMeetings);
             setAddingNewMeeting(false);
         }
     }
 
-    function handleDeleteMeeting(meeting) {
-        const nextMeetings = meetings.filter(m => m !== meeting);
-        setMeetings(nextMeetings);
+    async function handleDeleteMeeting(meeting) {
+        const response = await fetch(`/api/meetings/${meeting.id}`, {
+            method: 'DELETE',
+        });
+        if (response.ok) {
+            const nextMeetings = meetings.filter(m => m !== meeting);
+            setMeetings(nextMeetings);
+        }
     }
+    async function handleJoinMeeting(meeting) {
+        const response = await fetch(`/api/meetings/${meeting.id}/participants`, {
+            method: 'POST',
+            body: JSON.stringify({ login: username }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+            const updated = await fetch(`/api/meetings/${meeting.id}`);
+            const updatedMeeting = await updated.json();
+            setMeetings(meetings.map(m => m.id === meeting.id ? updatedMeeting : m));
+        }
+    }
+
+    async function handleLeaveMeeting(meeting) {
+        const response = await fetch(`/api/meetings/${meeting.id}/participants/${username}`, {
+            method: 'DELETE',
+        });
+        if (response.ok) {
+            const updated = await fetch(`/api/meetings/${meeting.id}`);
+            const updatedMeeting = await updated.json();
+            setMeetings(meetings.map(m => m.id === meeting.id ? updatedMeeting : m));
+        }
+    }
+
 
     return (
         <div>
@@ -45,7 +76,9 @@ export default function MeetingsPage({username}) {
             }
             {meetings.length > 0 &&
                 <MeetingsList meetings={meetings} username={username}
-                              onDelete={handleDeleteMeeting}/>}
+                              onDelete={handleDeleteMeeting}
+                              onJoin={handleJoinMeeting}
+                              onLeave={handleLeaveMeeting}/>}
         </div>
     )
 }

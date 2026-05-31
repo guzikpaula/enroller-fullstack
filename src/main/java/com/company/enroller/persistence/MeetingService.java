@@ -70,4 +70,18 @@ public class MeetingService {
         return query.list().size() != 0;
     }
 
+    public void addParticipant(Meeting meeting, Participant participant) {
+        Transaction transaction = this.session.beginTransaction();
+        meeting.addParticipant(participant);
+        this.session.merge(meeting);
+        transaction.commit();
+    }
+
+    public void removeParticipant(Meeting meeting, Participant participant) {
+        Transaction transaction = this.session.beginTransaction();
+        meeting.removeParticipant(participant);
+        this.session.merge(meeting);
+        transaction.commit();
+    }
+
 }

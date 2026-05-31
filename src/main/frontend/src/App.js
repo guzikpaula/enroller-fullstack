@@ -7,8 +7,13 @@ import UserPanel from "./UserPanel";
 function App() {
     const [loggedIn, setLoggedIn] = useState('');
 
-    function login(email) {
+    async function login(email) {
         if (email) {
+            await fetch('/api/participants', {
+                method: 'POST',
+                body: JSON.stringify({ login: email }),
+                headers: { 'Content-Type': 'application/json' }
+            });
             setLoggedIn(email);
         }
     }
